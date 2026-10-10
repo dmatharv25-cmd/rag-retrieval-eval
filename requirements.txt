@@ -1,0 +1,8 @@
+﻿sentence-transformers
+rank-bm25
+datasets
+numpy
+pandas
+scikit-learn
+matplotlib
+gradio
