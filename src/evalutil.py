@@ -25,3 +25,8 @@ def bootstrap_ci(values, n_boot=2000, seed=0):
     n = len(values)
     means = [values[rng.integers(0, n, n)].mean() for _ in range(n_boot)]
     return np.percentile(means, [2.5, 97.5])
+
+
+def zscore(S):
+    """Per-row z-score, same formula as final_test.py and hybrid_dev.py."""
+    return (S - S.mean(1, keepdims=True)) / (S.std(1, keepdims=True) + 1e-9)
