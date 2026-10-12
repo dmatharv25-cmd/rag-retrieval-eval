@@ -27,7 +27,7 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 | RRF (k=0, BM25 + BGE-small, ties by BM25 rank) | 0.723 | 0.905 | 0.937 | 0.802 |
 | Hybrid 3-way (BM25 0.3, MiniLM 0.3, BGE-small 0.4) | 0.746 | 0.916 | 0.951 | 0.823 |
 
-95% bootstrap intervals for each cell are printed by `src.final_test`. The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826).
+95% bootstrap intervals are printed per row by `src.bm25_eval` (BM25), `src.dense_eval` (MiniLM), `src.bge_eval` (BGE-small) and `src.final_test` (MiniLM hybrid). The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826). The BGE-small hybrid, both RRF rows and the 3-way row have no per-row intervals; `python -m src.paired_bootstrap` prints paired differences for the BGE-small hybrid and 3-way hybrid only.
 
 ## Live demo and light version
 
@@ -56,7 +56,7 @@ Same pipeline on BEIR SciFact (5,183 abstracts, documents are title plus abstrac
 | Hybrid (w=0.7 on MiniLM) | 0.593 | 0.847 | 0.691 | 0.717 |
 
 - Hybrid minus BM25: nDCG@10 +6.5 points (95% paired bootstrap interval +4.1 to +8.9), recall@1 +7.0 (+3.3 to +11.0). Hybrid minus MiniLM: nDCG@10 +6.9 (+4.2 to +9.7).
-- BM25 and  MiniLM are close on SciFact (recall@1 differs by 2.0 points, nDCG@10 by 0.4). On SQuAD BM25 led by 15.6 recall@1 points. This is consistent with the word-overlap explanation for SQuAD, but the domain, task and corpus size also differ, so it does not test that explanation. I did not compute a paired interval for the BM25 vs MiniLM gap on SciFact.
+- BM25 and MiniLM are close on SciFact (recall@1 differs by 2.0 points, nDCG@10 by 0.4). On SQuAD BM25 led by 15.6 recall@1 points. This is consistent with the word-overlap explanation for SQuAD, but the domain, task and corpus size also differ, so it does not test that explanation. I did not compute a paired interval for the BM25 vs MiniLM gap on SciFact.
 - Intervals are wide (300 test claims, about 5 points either side). The weight was tuned on one dataset at a time, so 0.6 on SQuAD and 0.7 here are separate choices.
 - Not checked: whether MiniLM's default sequence length truncates longer abstracts, and how these numbers compare with published BEIR results.
 - Run it: `python -m src.scifact_eval` (downloads SciFact from Hugging Face as mteb/scifact; embedding the corpus took about 5 minutes on my CPU).
@@ -96,13 +96,13 @@ Light version tested with torch 2.14.1, transformers 5.19.0, onnx 1.23.2 and onn
 
 ## What I did not test
 
-- Only one dense model, one tokenizer and one fusion method. Other models (for example larger or retrieval-tuned ones), BM25 settings and rank-based fusion were not tried.
+- Two dense models (all-MiniLM-L6-v2 and bge-small-en-v1.5, each with its own tokenizer), one weighted score-fusion scheme, and RRF with k=0 (no separate k grid for BGE-small). Larger or retrieval-tuned models, other BM25 settings, other fusion methods and rerankers were not tried.
 - Why BM25 beats MiniLM here (word overlap with the paragraph) is a hypothesis.
 - Paragraph-level retrieval only. No answer generation, no passage chunking.
 - Dev and test questions can point to the same paragraph.
 - SQuAD is Wikipedia text with written questions. Results may differ on real user queries.
 - The weight was tuned on 500 questions and was nearly flat between 0.5 and 0.6.
-- Ties are ranked optimistically (only strictly higher scores count). This affects 13 of 2,000 BM25 test questions and changes no reported metric at the precision shown.
+- Ties are ranked optimistically for score-based rows (only strictly higher scores count); RRF breaks ties by BM25 rank. For BM25 this affects 13 of 2,000 test questions and changes no BM25 metric at the precision shown (`python -m src.rrf_minilm` prints the check). I did not run the same check on the other rows.
 - Fusion weights were tuned on only 500 dev questions. The 3-way hybrid (66 weight combinations) beat the 2-way on dev (MRR 0.837 vs 0.830) but not on test (difference -0.0003, interval -0.0056 to +0.0051), so it is reported as an ablation only.
 - The live demo still runs the MiniLM hybrid. BGE-small was not exported to ONNX and was not run on SciFact.
 - BGE queries use the recommended instruction prefix; I did not test without it.
