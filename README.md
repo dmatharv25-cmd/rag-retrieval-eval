@@ -28,6 +28,7 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 | Hybrid 3-way (BM25 0.3, MiniLM 0.3, BGE-small 0.4) | 0.746 | 0.916 | 0.951 | 0.823 |
 
 95% bootstrap intervals for each cell are printed by `src.final_test`. The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826).
+| RRF (k=0, BM25 + MiniLM) | 0.695 | 0.894 | 0.932 | 0.783 |
 
 ## Live demo and light version
 
@@ -75,6 +76,7 @@ Same pipeline on BEIR SciFact (5,183 abstracts, documents are title plus abstrac
 3. `python -m src.bm25_eval dev`, `python -m src.dense_eval dev` (the corpus embedding took about 43 minutes on my CPU), `python -m src.hybrid_dev`
 4. `python -m src.bm25_eval test`, `python -m src.dense_eval test`, `python -m src.final_test`, `python -m src.errors`
 5. BGE-small and fusion (needs steps 3 and 4 first, since it reads the BM25 and MiniLM score files): `python -m src.bge_eval` (the corpus embedding took about 31 minutes on my CPU), `python -m src.fusion_bge`, `python -m src.paired_bootstrap`
+6. BM25 + MiniLM RRF and the BM25 tie check (needs steps 3 and 4): `python -m src.rrf_minilm`
 
 Tested on Windows with Python 3.12 only.
 
