@@ -1,12 +1,14 @@
 ﻿# Retrieval Evaluation on SQuAD: BM25 vs Dense vs Hybrid
 
-Which retrieval method finds the right paragraph for a question: keyword search (BM25), embeddings (MiniLM), or a weighted hybrid? Evaluated with bootstrap intervals on a fixed split.
+Which retrieval method finds the right paragraph for a question: keyword search (BM25), embeddings (MiniLM, BGE-small), or a weighted hybrid? Evaluated with bootstrap intervals on a fixed split.
 
 ## Summary
 
 - **Corpus:** 20,958 unique SQuAD v1.1 paragraphs. **Dev:** 500 validation questions (all tuning). **Test:** 2,000 other validation questions, scored once. Seed 42.
-- **Result (test):** hybrid recall@1 0.731, BM25 0.683, MiniLM 0.527.
-- **Hybrid minus BM25, recall@1:** +4.7 points (95% paired bootstrap interval +3.3 to +6.1).
+- **Result (test):** best hybrid (BM25 + BGE-small) recall@1 0.750, MRR 0.823. MiniLM hybrid 0.731, BM25 0.683, BGE-small 0.600, MiniLM 0.527.
+- **Hybrid (MiniLM) minus BM25, recall@1:** +4.7 points (95% paired bootstrap interval +3.3 to +6.1).
+- **Hybrid (BGE-small) minus BM25, recall@1:** +6.7 points (interval +5.3 to +8.2).
+- **Hybrid (BGE-small) minus hybrid (MiniLM):** MRR +0.014 (interval +0.007 to +0.021), recall@1 +2.0 points (interval +0.8 to +3.2). Weighted score fusion scored above reciprocal rank fusion with both embedding models (MRR 0.823 vs 0.802 with BGE-small, 0.810 vs 0.783 with MiniLM); I did not compute a paired interval for that comparison.
 - **BM25 minus MiniLM, recall@1:** +15.6 points (interval +13.2 to +18.0). Keyword search clearly beat this dense model.
 - **Main limit:** SQuAD questions were written while reading the paragraph, so they reuse its words. This likely favors BM25, but I did not test that.
 - **Second dataset (SciFact, 300 test claims):** hybrid nDCG@10 0.717 vs BM25 0.652 (+6.5 points, 95% paired bootstrap interval +4.1 to +8.9). BM25 and MiniLM are close there (0.652 vs 0.648), unlike on SQuAD.
@@ -17,9 +19,13 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 |---|---|---|---|---|
 | BM25 | 0.683 | 0.847 | 0.889 | 0.760 |
 | MiniLM (all-MiniLM-L6-v2) | 0.527 | 0.771 | 0.838 | 0.635 |
+| BGE-small (bge-small-en-v1.5) | 0.600 | 0.816 | 0.873 | 0.696 |
 | Hybrid (w=0.6 on MiniLM) | 0.731 | 0.905 | 0.944 | 0.810 |
 | Hybrid, light (ONNX MiniLM + sparse BM25) | 0.732 | 0.904 | 0.942 | 0.811 |
 | RRF (k=0, BM25 + MiniLM, ties by BM25 rank) | 0.695 | 0.894 | 0.932 | 0.783 |
+| Hybrid (w=0.6 on BGE-small) | 0.750 | 0.912 | 0.945 | 0.823 |
+| RRF (k=0, BM25 + BGE-small, ties by BM25 rank) | 0.723 | 0.905 | 0.937 | 0.802 |
+| Hybrid 3-way (BM25 0.3, MiniLM 0.3, BGE-small 0.4) | 0.746 | 0.916 | 0.951 | 0.823 |
 
 95% bootstrap intervals for each cell are printed by `src.final_test`. The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826).
 
@@ -34,6 +40,8 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 
 - BM25: rank_bm25 (Okapi), lowercase word tokens.
 - Dense: all-MiniLM-L6-v2, cosine similarity on normalized embeddings.
+- Dense, second model: BAAI/bge-small-en-v1.5, cosine similarity on normalized embeddings, queries use the model's recommended instruction prefix, passages none, max sequence length 256.
+- Fusion: z-scored BM25 and dense scores combined with a weight tuned on dev (grid step 0.1). RRF uses ranks only (k=0 was chosen on dev for BM25 + MiniLM, where k=0 to 3 were nearly tied, and reused for BM25 + BGE-small without a separate grid; ties broken by BM25 rank).
 - Hybrid: per-question z-score of each method's scores across the corpus, then (1-w)*BM25 + w*MiniLM. The weight w=0.6 was chosen on dev by MRR (grid 0.0 to 1.0, step 0.1; 0.5 and 0.6 were nearly tied). Dev MRR at w=0.6 was 0.824, test 0.810.
 - No model was trained, so there are no seeds.
 
@@ -93,3 +101,6 @@ Light version tested with torch 2.14.1, transformers 5.19.0, onnx 1.23.2 and onn
 - SQuAD is Wikipedia text with written questions. Results may differ on real user queries.
 - The weight was tuned on 500 questions and was nearly flat between 0.5 and 0.6.
 - Ties are ranked optimistically (only strictly higher scores count). This affects 13 of 2,000 BM25 test questions and changes no reported metric at the precision shown.
+- Fusion weights were tuned on only 500 dev questions. The 3-way hybrid (66 weight combinations) beat the 2-way on dev (MRR 0.837 vs 0.830) but not on test (difference -0.0003, interval -0.0056 to +0.0051), so it is reported as an ablation only.
+- The live demo still runs the MiniLM hybrid. BGE-small was not exported to ONNX and was not run on SciFact.
+- BGE queries use the recommended instruction prefix; I did not test without it.
