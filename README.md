@@ -74,6 +74,7 @@ Same pipeline on BEIR SciFact (5,183 abstracts, documents are title plus abstrac
 2. `python -m src.data`
 3. `python -m src.bm25_eval dev`, `python -m src.dense_eval dev` (the corpus embedding took about 43 minutes on my CPU), `python -m src.hybrid_dev`
 4. `python -m src.bm25_eval test`, `python -m src.dense_eval test`, `python -m src.final_test`, `python -m src.errors`
+5. BGE-small and fusion (needs steps 3 and 4 first, since it reads the BM25 and MiniLM score files): `python -m src.bge_eval` (the corpus embedding took about 31 minutes on my CPU), `python -m src.fusion_bge`, `python -m src.paired_bootstrap`
 
 Tested on Windows with Python 3.12 only.
 
