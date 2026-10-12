@@ -25,7 +25,7 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 
 - **Live demo:** https://rag-demo-7iru.onrender.com (free Render instance, so the first load can take a minute). Code: https://github.com/dmatharv25-cmd/rag-demo
 - **Light version:** MiniLM runs through ONNX Runtime and BM25 uses precomputed sparse matrices, so the demo needs no torch. On the same test split it scores recall@1 0.732 and MRR 0.811, against 0.731 and 0.810 for the full hybrid. The differences are well inside the bootstrap intervals.
-- **Memory:** about 355 MB after loading and about 400 MB after a query, measured locally on Windows. Render's free tier has 512 MB. I did not measure the peak on Render.
+- **Memory:** about 355 MB after loading and about 400 MB after a query, measured locally on Windows. Render's free tier has 512 MB. On Render's free tier, the service stayed live after test queries, with no restart or out-of-memory event in Render's Events tab. I did not read the memory peak there.
 
 ## Method
 
