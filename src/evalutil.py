@@ -8,7 +8,7 @@ def load(name):
 
 
 def rank_of_target(scores, target):
-    """1-based rank of the target paragraph (ties counted pessimistically)."""
+    """1-based rank of the target paragraph. Only strictly higher scores count, so a tied target gets the best rank of its tie group (optimistic)."""
     return int((scores > scores[target]).sum()) + 1
 
 
