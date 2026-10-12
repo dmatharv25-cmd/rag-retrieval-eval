@@ -27,7 +27,7 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 | RRF (k=0, BM25 + BGE-small, ties by BM25 rank) | 0.723 | 0.905 | 0.937 | 0.802 |
 | Hybrid 3-way (BM25 0.3, MiniLM 0.3, BGE-small 0.4) | 0.746 | 0.916 | 0.951 | 0.823 |
 
-95% bootstrap intervals are printed per row by `src.bm25_eval` (BM25), `src.dense_eval` (MiniLM), `src.bge_eval` (BGE-small) and `src.final_test` (MiniLM hybrid). The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826). The BGE-small hybrid, both RRF rows and the 3-way row have no per-row intervals; `python -m src.paired_bootstrap` prints paired differences for the BGE-small hybrid and 3-way hybrid only.
+95% bootstrap intervals for every row except the light version are printed by `python -m src.row_intervals` (for example recall@1: BM25 0.663 to 0.704, hybrid on BGE-small 0.731 to 0.769, RRF BM25 + BGE-small 0.704 to 0.743). The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826). These are unpaired intervals, so overlap between two rows does not test whether they differ; `python -m src.paired_bootstrap` prints paired differences for the BGE-small hybrid and 3-way hybrid only.
 
 ## Live demo and light version
 
@@ -76,6 +76,7 @@ Same pipeline on BEIR SciFact (5,183 abstracts, documents are title plus abstrac
 4. `python -m src.bm25_eval test`, `python -m src.dense_eval test`, `python -m src.final_test`, `python -m src.errors`
 5. BGE-small and fusion (needs steps 3 and 4 first, since it reads the BM25 and MiniLM score files): `python -m src.bge_eval` (the corpus embedding took about 31 minutes on my CPU), `python -m src.fusion_bge`, `python -m src.paired_bootstrap`
 6. BM25 + MiniLM RRF and the BM25 tie check (needs steps 3 and 4): `python -m src.rrf_minilm`
+7. Per-row 95% intervals for the table (needs steps 3 to 5): `python -m src.row_intervals`
 
 Tested on Windows with Python 3.12 only.
 
