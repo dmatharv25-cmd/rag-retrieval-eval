@@ -9,6 +9,7 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 - **Hybrid minus BM25, recall@1:** +4.7 points (95% paired bootstrap interval +3.3 to +6.1).
 - **BM25 minus MiniLM, recall@1:** +15.6 points (interval +13.2 to +18.0). Keyword search clearly beat this dense model.
 - **Main limit:** SQuAD questions were written while reading the paragraph, so they reuse its words. This likely favors BM25, but I did not test that.
+- **Second dataset (SciFact, 300 test claims):** hybrid nDCG@10 0.717 vs BM25 0.652 (+6.5 points, 95% paired bootstrap interval +4.1 to +8.9). BM25 and MiniLM are close there (0.652 vs 0.648), unlike on SQuAD.
 
 ## Results (test set, 2,000 questions)
 
@@ -34,6 +35,22 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 - Dense: all-MiniLM-L6-v2, cosine similarity on normalized embeddings.
 - Hybrid: per-question z-score of each method's scores across the corpus, then (1-w)*BM25 + w*MiniLM. The weight w=0.6 was chosen on dev by MRR (grid 0.0 to 1.0, step 0.1; 0.5 and 0.6 were nearly tied). Dev MRR at w=0.6 was 0.824, test 0.810.
 - No model was trained, so there are no seeds.
+
+## Second dataset: SciFact
+
+Same pipeline on BEIR SciFact (5,183 abstracts, documents are title plus abstract). The 809 train-split claims were used as dev to choose the fusion weight (w=0.7, dev MRR 0.696; 0.689 at 0.6 and 0.692 at 0.8). The 300 test claims were scored once. Here recall@k means at least one relevant document in the top k.
+
+| Method | recall@1 | recall@10 | MRR | nDCG@10 |
+|---|---|---|---|---|
+| BM25 | 0.523 | 0.797 | 0.624 | 0.652 |
+| MiniLM (all-MiniLM-L6-v2) | 0.503 | 0.800 | 0.613 | 0.648 |
+| Hybrid (w=0.7 on MiniLM) | 0.593 | 0.847 | 0.691 | 0.717 |
+
+- Hybrid minus BM25: nDCG@10 +6.5 points (95% paired bootstrap interval +4.1 to +8.9), recall@1 +7.0 (+3.3 to +11.0). Hybrid minus MiniLM: nDCG@10 +6.9 (+4.2 to +9.7).
+- BM25 and  MiniLM are close on SciFact (recall@1 differs by 2.0 points, nDCG@10 by 0.4). On SQuAD BM25 led by 15.6 recall@1 points. This is consistent with the word-overlap explanation for SQuAD, but the domain, task and corpus size also differ, so it does not test that explanation. I did not compute a paired interval for the BM25 vs MiniLM gap on SciFact.
+- Intervals are wide (300 test claims, about 5 points either side). The weight was tuned on one dataset at a time, so 0.6 on SQuAD and 0.7 here are separate choices.
+- Not checked: whether MiniLM's default sequence length truncates longer abstracts, and how these numbers compare with published BEIR results.
+- Run it: `python -m src.scifact_eval` (downloads SciFact from Hugging Face as mteb/scifact; embedding the corpus took about 5 minutes on my CPU).
 
 ## Error analysis (test)
 
