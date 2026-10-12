@@ -111,3 +111,4 @@ Light version tested with torch 2.14.1, transformers 5.19.0, onnx 1.23.2 and onn
 - Fusion weights were tuned on only 500 dev questions. The 3-way hybrid (66 weight combinations) beat the 2-way on dev (MRR 0.837 vs 0.830) but not on test (difference -0.0003, interval -0.0056 to +0.0051), so it is reported as an ablation only.
 - The live demo still runs the MiniLM hybrid. BGE-small was not exported to ONNX and was not run on SciFact.
 - BGE queries use the recommended instruction prefix; I did not test without it.
+- The cross-encoder (ms-marco-MiniLM-L-6-v2) was trained on MS MARCO web search data, not SQuAD. I did not examine which questions the reranker fixes or breaks, I did not run it on SciFact, and the live demo does not use it (on Render's free tier it would likely be too slow, but I did not measure that).
