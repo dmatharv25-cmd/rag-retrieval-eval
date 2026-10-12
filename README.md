@@ -5,7 +5,8 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 ## Summary
 
 - **Corpus:** 20,958 unique SQuAD v1.1 paragraphs. **Dev:** 500 validation questions (all tuning). **Test:** 2,000 other validation questions, scored once. Seed 42.
-- **Result (test):** best hybrid (BM25 + BGE-small) recall@1 0.750, MRR 0.823. MiniLM hybrid 0.731, BM25 0.683, BGE-small 0.600, MiniLM 0.527.
+- **Result (test):** best overall is the BGE-small hybrid with a cross-encoder rerank of its top 20: recall@1 0.830, MRR 0.881. Best without reranking: hybrid (BM25 + BGE-small) recall@1 0.750, MRR 0.823. MiniLM hybrid 0.731, BM25 0.683, BGE-small 0.600, MiniLM 0.527.
+- **Rerank minus hybrid (BGE-small), test:** recall@1 +7.9 points (95% paired interval +6.2 to +9.6), MRR +0.057 (+0.046 to +0.068). The model and cutoff were fixed in advance and test was run once, but only one cross-encoder and one cutoff were tried. Recall@10 moves only from 0.945 to 0.957, because reranking reorders the top 20 and cannot add paragraphs.
 - **Hybrid (MiniLM) minus BM25, recall@1:** +4.7 points (95% paired bootstrap interval +3.3 to +6.1).
 - **Hybrid (BGE-small) minus BM25, recall@1:** +6.7 points (interval +5.3 to +8.2).
 - **Hybrid (BGE-small) minus hybrid (MiniLM):** MRR +0.014 (interval +0.007 to +0.021), recall@1 +2.0 points (interval +0.8 to +3.2). Weighted score fusion scored above reciprocal rank fusion with both embedding models (MRR 0.823 vs 0.802 with BGE-small, 0.810 vs 0.783 with MiniLM); I did not compute a paired interval for that comparison.
