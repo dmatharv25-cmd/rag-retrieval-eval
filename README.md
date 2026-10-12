@@ -26,8 +26,9 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 | Hybrid (w=0.6 on BGE-small) | 0.750 | 0.912 | 0.945 | 0.823 |
 | RRF (k=0, BM25 + BGE-small, ties by BM25 rank) | 0.723 | 0.905 | 0.937 | 0.802 |
 | Hybrid 3-way (BM25 0.3, MiniLM 0.3, BGE-small 0.4) | 0.746 | 0.916 | 0.951 | 0.823 |
+| Hybrid (w=0.6 on BGE-small) + cross-encoder rerank of top 20 | 0.830 | 0.943 | 0.957 | 0.881 |
 
-95% bootstrap intervals for every row except the light version are printed by `python -m src.row_intervals` (for example recall@1: BM25 0.663 to 0.704, hybrid on BGE-small 0.731 to 0.769, RRF BM25 + BGE-small 0.704 to 0.743). The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826). These are unpaired intervals, so overlap between two rows does not test whether they differ; `python -m src.paired_bootstrap` prints paired differences for the BGE-small hybrid and 3-way hybrid only.
+95% bootstrap intervals for every row except the light version and the rerank row are printed by `python -m src.row_intervals`; the rerank row's (recall@1 0.812 to 0.846, MRR 0.868 to 0.893) are printed by `python -m src.rerank test` (for example recall@1: BM25 0.663 to 0.704, hybrid on BGE-small 0.731 to 0.769, RRF BM25 + BGE-small 0.704 to 0.743). The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826). These are unpaired intervals, so overlap between two rows does not test whether they differ; `python -m src.paired_bootstrap` prints paired differences for the BGE-small hybrid and 3-way hybrid only.
 
 ## Live demo and light version
 
@@ -42,6 +43,7 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 - Dense: all-MiniLM-L6-v2, cosine similarity on normalized embeddings.
 - Dense, second model: BAAI/bge-small-en-v1.5, cosine similarity on normalized embeddings, queries use the model's recommended instruction prefix, passages none, max sequence length 256.
 - Fusion: z-scored BM25 and dense scores combined with a weight tuned on dev (grid step 0.1). RRF uses ranks only (k=0 was chosen on dev for BM25 + MiniLM, where k=0 to 3 were nearly tied, and reused for BM25 + BGE-small without a separate grid; ties broken by BM25 rank).
+- Rerank: cross-encoder/ms-marco-MiniLM-L-6-v2 (max length 256) rescored the top 20 paragraphs of the BGE-small hybrid. The model and the cutoff of 20 were fixed in advance and nothing was tuned; I checked dev once (recall@1 0.768 to 0.828) and ran test once. Paragraphs outside the top 20 keep their hybrid rank, so recall@10 and above are capped by the top-20 coverage (target inside the top 20 for 96.8% of test questions). Test, recall@1: reranked minus hybrid +7.9 points (95% paired interval +6.2 to +9.6), MRR +0.057 (+0.046 to +0.068). Only this one cross-encoder and this one cutoff were tried.
 - Hybrid: per-question z-score of each method's scores across the corpus, then (1-w)*BM25 + w*MiniLM. The weight w=0.6 was chosen on dev by MRR (grid 0.0 to 1.0, step 0.1; 0.5 and 0.6 were nearly tied). Dev MRR at w=0.6 was 0.824, test 0.810.
 - No model was trained, so there are no seeds.
 
@@ -77,6 +79,7 @@ Same pipeline on BEIR SciFact (5,183 abstracts, documents are title plus abstrac
 5. BGE-small and fusion (needs steps 3 and 4 first, since it reads the BM25 and MiniLM score files): `python -m src.bge_eval` (the corpus embedding took about 31 minutes on my CPU), `python -m src.fusion_bge`, `python -m src.paired_bootstrap`
 6. BM25 + MiniLM RRF and the BM25 tie check (needs steps 3 and 4): `python -m src.rrf_minilm`
 7. Per-row 95% intervals for the table (needs steps 3 to 5): `python -m src.row_intervals`
+8. Cross-encoder rerank (needs step 5; downloads the cross-encoder, about 7 minutes on dev and 27 minutes on test on my CPU): `python -m src.rerank dev`, `python -m src.rerank test`
 
 Tested on Windows with Python 3.12 only.
 
@@ -97,7 +100,7 @@ Light version tested with torch 2.14.1, transformers 5.19.0, onnx 1.23.2 and onn
 
 ## What I did not test
 
-- Two dense models (all-MiniLM-L6-v2 and bge-small-en-v1.5, each with its own tokenizer), one weighted score-fusion scheme, and RRF with k=0 (no separate k grid for BGE-small). Larger or retrieval-tuned models, other BM25 settings, other fusion methods and rerankers were not tried.
+- Two dense models (all-MiniLM-L6-v2 and bge-small-en-v1.5, each with its own tokenizer), one weighted score-fusion scheme, and RRF with k=0 (no separate k grid for BGE-small). Larger or retrieval-tuned models, other BM25 settings, other fusion methods, other cross-encoders and other rerank cutoffs were not tried.
 - Why BM25 beats MiniLM here (word overlap with the paragraph) is a hypothesis.
 - Paragraph-level retrieval only. No answer generation, no passage chunking.
 - Dev and test questions can point to the same paragraph.
