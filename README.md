@@ -2,6 +2,10 @@
 
 Which retrieval method finds the right paragraph for a question: keyword search (BM25), embeddings (MiniLM, BGE-small), or a weighted hybrid? Evaluated with bootstrap intervals on a fixed split.
 
+**TL;DR:** On 2,000 held-out SQuAD questions, a BM25 + BGE-small hybrid with cross-encoder reranking reaches recall@1 0.830 (BM25 alone: 0.683). Differences are tested with paired bootstrap intervals. A light ONNX MiniLM hybrid runs as a [live demo](https://rag-demo-7iru.onrender.com) on a 512 MB free tier.
+
+![recall@1 by method](docs/recall_at_1.png)
+
 ## Summary
 
 - **Corpus:** 20,958 unique SQuAD v1.1 paragraphs. **Dev:** 500 validation questions (all tuning). **Test:** 2,000 other validation questions, scored once. Seed 42.
@@ -29,7 +33,7 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 | Hybrid 3-way (BM25 0.3, MiniLM 0.3, BGE-small 0.4) | 0.746 | 0.916 | 0.951 | 0.823 |
 | Hybrid (w=0.6 on BGE-small) + cross-encoder rerank of top 20 | 0.830 | 0.943 | 0.957 | 0.881 |
 
-95% bootstrap intervals for every row except the light version and the rerank row are printed by `python -m src.row_intervals`; the rerank row's (recall@1 0.812 to 0.846, MRR 0.868 to 0.893) are printed by `python -m src.rerank test` (for example recall@1: BM25 0.663 to 0.704, hybrid on BGE-small 0.731 to 0.769, RRF BM25 + BGE-small 0.704 to 0.743). The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826). These are unpaired intervals, so overlap between two rows does not test whether they differ; `python -m src.paired_bootstrap` prints paired differences for the BGE-small hybrid and 3-way hybrid only.
+95% bootstrap intervals for every row except the light version and the rerank row are printed by `python -m src.row_intervals` (for example recall@1: BM25 0.663 to 0.704, hybrid on BGE-small 0.731 to 0.769, RRF BM25 + BGE-small 0.704 to 0.743). The rerank row's (recall@1 0.812 to 0.846, MRR 0.868 to 0.893) are printed by `python -m src.rerank test`. The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826). These are unpaired intervals, so overlap between two rows does not test whether they differ; `python -m src.paired_bootstrap` prints paired differences for the BGE-small hybrid and 3-way hybrid only, and `python -m src.rerank test` prints the paired rerank-minus-hybrid difference.
 
 ## Live demo and light version
 
