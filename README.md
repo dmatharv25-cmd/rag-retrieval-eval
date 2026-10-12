@@ -91,3 +91,4 @@ Light version tested with torch 2.14.1, transformers 5.19.0, onnx 1.23.2 and onn
 - Dev and test questions can point to the same paragraph.
 - SQuAD is Wikipedia text with written questions. Results may differ on real user queries.
 - The weight was tuned on 500 questions and was nearly flat between 0.5 and 0.6.
+- Ties are ranked optimistically (only strictly higher scores count). This affects 13 of 2,000 BM25 test questions and changes no reported metric at the precision shown.
