@@ -28,7 +28,6 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 | Hybrid 3-way (BM25 0.3, MiniLM 0.3, BGE-small 0.4) | 0.746 | 0.916 | 0.951 | 0.823 |
 
 95% bootstrap intervals for each cell are printed by `src.final_test`. The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826).
-| RRF (k=0, BM25 + MiniLM) | 0.695 | 0.894 | 0.932 | 0.783 |
 
 ## Live demo and light version
 
