@@ -19,6 +19,7 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 | MiniLM (all-MiniLM-L6-v2) | 0.527 | 0.771 | 0.838 | 0.635 |
 | Hybrid (w=0.6 on MiniLM) | 0.731 | 0.905 | 0.944 | 0.810 |
 | Hybrid, light (ONNX MiniLM + sparse BM25) | 0.732 | 0.904 | 0.942 | 0.811 |
+| RRF (k=0, BM25 + MiniLM, ties by BM25 rank) | 0.695 | 0.894 | 0.932 | 0.783 |
 
 95% bootstrap intervals for each cell are printed by `src.final_test`. The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826).
 
