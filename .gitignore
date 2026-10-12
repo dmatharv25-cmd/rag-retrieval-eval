@@ -1,3 +1,9 @@
 ﻿.venv/
 data/
 __pycache__/
+
+minilm_onnx/
+app.py
+app_light.py
+app_light2.py
+src/sparse_check.py

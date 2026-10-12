@@ -17,8 +17,15 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 | BM25 | 0.683 | 0.847 | 0.889 | 0.760 |
 | MiniLM (all-MiniLM-L6-v2) | 0.527 | 0.771 | 0.838 | 0.635 |
 | Hybrid (w=0.6 on MiniLM) | 0.731 | 0.905 | 0.944 | 0.810 |
+| Hybrid, light (ONNX MiniLM + sparse BM25) | 0.732 | 0.904 | 0.942 | 0.811 |
 
-95% bootstrap intervals for each cell are printed by `src.final_test`.
+95% bootstrap intervals for each cell are printed by `src.final_test`. The light version's are printed by `python -m src.light_eval test` (recall@1 0.712 to 0.751, MRR 0.796 to 0.826).
+
+## Live demo and light version
+
+- **Live demo:** https://rag-demo-7iru.onrender.com (free Render instance, so the first load can take a minute). Code: https://github.com/dmatharv25-cmd/rag-demo
+- **Light version:** MiniLM runs through ONNX Runtime and BM25 uses precomputed sparse matrices, so the demo needs no torch. On the same test split it scores recall@1 0.732 and MRR 0.811, against 0.731 and 0.810 for the full hybrid. The differences are well inside the bootstrap intervals.
+- **Memory:** about 355 MB after loading and about 400 MB after a query, measured locally on Windows. Render's free tier has 512 MB. I did not measure the peak on Render.
 
 ## Method
 
@@ -32,6 +39,7 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 - BM25 beat MiniLM on recall@1 in every question type. The hybrid was best or tied in most, not in "when" (tied with BM25) or "why" (below BM25, only 29 questions).
 - The hybrid had 112 of 2,000 questions with the right paragraph outside the top 10. Five I read by hand included questions with no content words ("Who discovered this and where did they come from?"), which no retriever could resolve.
 - Per-type groups are small (29 to 906 questions), so differences within them are noisy.
+- In the live demo, "Who was the first emperor of Rome?" returns a Constantine paragraph at rank 1 and the Augustus paragraph at rank 2. Lexical overlap can outrank the true answer. This is one example, not a measured rate.
 
 ## Run it yourself
 
