@@ -7,7 +7,7 @@ import numpy as np
 from src.evalutil import load, metrics
 from src.fusion_bge import rank_matrix, rrf_ranks
 
-K_GRID = [0, 1, 5, 10, 20, 40, 60, 100]
+K_GRID = [0, 1, 2, 3, 5, 10, 20, 40, 60, 100]
 
 
 def load_split(split):
