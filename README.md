@@ -50,6 +50,21 @@ Which retrieval method finds the right paragraph for a question: keyword search 
 
 Tested on Windows with Python 3.12 only.
 
+## Light version: run it yourself
+
+Needs the full-pipeline outputs first: steps 1 and 2 above, plus `python -m src.dense_eval dev` once, which builds `data/minilm_corpus_emb.npy`.
+
+1. `python -m src.build_index` builds the sparse BM25 index (`data/bm25_M.npz`, `bm25_idf.npy`, `bm25_vocab.json`).
+2. `python -m src.export_onnx minilm_onnx` exports all-MiniLM-L6-v2 to ONNX (inputs `input_ids` and `attention_mask`) and saves the tokenizer files.
+3. `python -m src.onnx_check` compares ONNX and torch embeddings on three queries. I got cosine 1.0 on all three.
+4. `python -m src.light_eval test` prints recall@1 0.732, recall@5 0.904, recall@10 0.942 and MRR 0.811 with bootstrap intervals.
+
+Embedding recipe: tokenize with truncation at 256 tokens, run the ONNX graph, mean-pool over the attention mask, then L2-normalize. The graph outputs token states only, so pooling and normalization happen in the code.
+
+I rebuilt the ONNX file with this script and re-ran steps 3 and 4. The metrics matched the file used for the demo to three decimals. The two files differ by about 6 KB in size, so they are not byte-identical. The live demo uses the earlier export.
+
+Light version tested with torch 2.14.1, transformers 5.19.0, onnx 1.23.2 and onnxruntime 1.31.0. The export uses the legacy TorchScript exporter and prints tracer warnings, which did not change the results on this corpus.
+
 ## What I did not test
 
 - Only one dense model, one tokenizer and one fusion method. Other models (for example larger or retrieval-tuned ones), BM25 settings and rank-based fusion were not tried.
